@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QEMU with WebAssembly and noVNC</title>
+    <style>
+        #vnc_iframe {
+            border: 1px solid black;
+            width: 800px;
+            height: 600px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Running QEMU with WebAssembly and noVNC</h1>
+	<center>
+    <iframe id="vnc_iframe" src="vnc-lite.html"></iframe>
+    <script>
+        async function runQEMU() {
+            const isoResponse = await fetch('TinyCore-current.iso');
+            const isoBuffer = await isoResponse.arrayBuffer();
+
+            const wasmResponse = await fetch('qemu-system-x86_64.wasm');
+            const wasmBytes = await wasmResponse.arrayBuffer();
+            const wasmModule = await WebAssembly.instantiate(wasmBytes, {});
+            const qemuInstance = wasmModule.instance;
+
+            console.log('QEMU instance:', qemuInstance);
+            // Initialize QEMU with graphical parameters
+            const canvas = document.createElement('canvas');
+            canvas.id = 'qemu_canvas';
+            canvas.width = 800;
+            canvas.height = 600;
+            document.body.appendChild(canvas);
+
+            qemuInstance.exports.qemu_init(isoBuffer, canvas);
+            qemuInstance.exports.qemu_run();
+        }
+
+        runQEMU();
+    </script>
+	</center>
+</body>
+</html>
